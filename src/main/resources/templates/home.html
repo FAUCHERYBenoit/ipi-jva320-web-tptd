@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <title>Aide à domicile RH - gestion des salariés</title>
@@ -32,7 +32,7 @@
 
 <div class="container mt-2">
     <div class="jumbotron">
-        <h1>Bienvenue dans l'interface d'administration RH ! (26 salariés)</h1>
+        <h1 th:utext="${htmlMessage}"></h1>
         <p>Voir dans <code>README.md</code> comment configurer la base de données de l'application, la lancer et afficher une page statique.</p>
         <p>Cette application est développée sous forme de Controllers Spring MVC et templates Thymeleaf. Les premiers sont à développer et les seconds à enrichir à partir des pages HTML existantes.</p>
         <p/>
