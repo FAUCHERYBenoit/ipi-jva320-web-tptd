@@ -14,6 +14,7 @@ public class HomeController {
 	@GetMapping(value = "/")
 	public String home(final ModelMap model) {
 		model.put("listCount", salarieAideADomicileService.countSalaries());
+		model.put("title","Aide à domicile RH - gestion des salariés");
 		return "home";
 	}
 }

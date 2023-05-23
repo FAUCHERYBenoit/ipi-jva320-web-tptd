@@ -20,12 +20,12 @@ public class SalarieController {
 	
 	@Autowired
 	private SalarieAideADomicileRepository salarieAideADomicileRepository;
-	
-	@GetMapping(value = "/salaries/{id}")
+	@GetMapping(value = { "/salaries/{id}", "/salaries/aide/{id}" })
 	public String salarieGet(@PathVariable String id, final ModelMap model) {
 		SalarieAideADomicile salarie = salarieAideADomicileService.getSalarie(Long.valueOf(id));
 		model.put("salarie",salarie);
 		model.put("listCount", salarieAideADomicileService.countSalaries());
+		model.put("title","Gestion des salariés");
 		return "detail_Salarie";
 	}
 	
@@ -33,6 +33,7 @@ public class SalarieController {
 	public String salarieInputSave(final ModelMap model) {
 		SalarieAideADomicile salarie = new SalarieAideADomicile();
 		model.put("salarie",salarie);
+		model.put("title","Gestion des salariés");
 		model.put("listCount", salarieAideADomicileService.countSalaries());
 		return "detail_Salarie";
 	}
@@ -56,12 +57,39 @@ public class SalarieController {
 	}
 	
 	@GetMapping(value = "/salaries")
-	public String salaries(@RequestParam String page, @RequestParam String size, @RequestParam String sortProperty, @RequestParam String sortDirection, final ModelMap model) {
-		int currentPage = Integer.parseInt(page);
-		int pageSize = Integer.parseInt(size);
-
-		Page<SalarieAideADomicile> salaries = salarieAideADomicileService.getSalaries(
-				PageRequest.of(currentPage, pageSize, Sort.by("id")));
+	public String salaries(
+			@RequestParam(required = false) String page,
+			@RequestParam(required = false) String size,
+			@RequestParam(required = false) String sortProperty,
+			@RequestParam(required = false) String sortDirection,
+			@RequestParam(required = false) String nom,
+			final ModelMap model) {
+		int currentPage;
+		int pageSize;
+		List<SalarieAideADomicile> listSalaries = Collections.emptyList();
+		Page<SalarieAideADomicile> salaries = new PageImpl<>(listSalaries);
+		
+		
+		if(page != null){
+			currentPage = Integer.parseInt(page);
+		}
+		else{
+			currentPage = 0;
+		}
+		if(size != null){
+			pageSize = Integer.parseInt(size);
+		}
+		else{
+			pageSize = 10;
+		}
+		if(nom != null){
+			listSalaries = salarieAideADomicileService.getSalaries(nom, PageRequest.of(currentPage, pageSize, Sort.by("id")));
+		}
+		else{
+			salaries = salarieAideADomicileService.getSalaries(
+					PageRequest.of(currentPage, pageSize, Sort.by("id")));
+		}
+		
 		
 		if(Objects.equals(sortProperty, "id")){
 			if (Objects.equals(sortDirection, "ASC")) {
@@ -86,8 +114,15 @@ public class SalarieController {
 			}
 		}
 		model.put("currentPage", currentPage);
+		model.put("maxPage", Math.ceil((float) salarieAideADomicileService.countSalaries()/pageSize));
 		model.put("listCount", salarieAideADomicileService.countSalaries());
-		model.put("salaries",salaries);
+		if(nom != null){
+			model.put("salaries",listSalaries);
+		}
+		else{
+			model.put("salaries",salaries);
+		}
+		model.put("title","Gestion des salariés");
 		return "list";
 	}
 }
