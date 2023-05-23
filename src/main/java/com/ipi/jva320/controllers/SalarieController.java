@@ -4,11 +4,16 @@ import com.ipi.jva320.exception.SalarieException;
 import com.ipi.jva320.model.SalarieAideADomicile;
 import com.ipi.jva320.repository.SalarieAideADomicileRepository;
 import com.ipi.jva320.service.SalarieAideADomicileService;
+import org.attoparser.ParseException;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.*;
+import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
+import org.thymeleaf.exceptions.TemplateInputException;
 
 import java.util.*;
 
@@ -20,12 +25,25 @@ public class SalarieController {
 	
 	@Autowired
 	private SalarieAideADomicileRepository salarieAideADomicileRepository;
+	
+	static boolean error = false;
+	
 	@GetMapping(value = { "/salaries/{id}", "/salaries/aide/{id}" })
 	public String salarieGet(@PathVariable String id, final ModelMap model) {
-		SalarieAideADomicile salarie = salarieAideADomicileService.getSalarie(Long.valueOf(id));
-		model.put("salarie",salarie);
-		model.put("listCount", salarieAideADomicileService.countSalaries());
-		model.put("title","Gestion des salariés");
+		try{
+			SalarieAideADomicile salarie = salarieAideADomicileService.getSalarie(Long.valueOf(id));
+			if(salarie.getId() == null){
+				throw new NullPointerException("No salarie found");
+			}
+			model.put("salarie",salarie);
+			model.put("listCount", salarieAideADomicileService.countSalaries());
+			model.put("title","Gestion des salariés");
+			model.put("error",error);
+		}
+		catch (NullPointerException e){
+			return "redirect:/";
+		}
+		
 		return "detail_Salarie";
 	}
 	
@@ -35,17 +53,37 @@ public class SalarieController {
 		model.put("salarie",salarie);
 		model.put("title","Gestion des salariés");
 		model.put("listCount", salarieAideADomicileService.countSalaries());
+		model.put("error",error);
 		return "detail_Salarie";
 	}
 	
 	@PostMapping(value = "/salaries/save")
 	public String salarieSaveForm(@ModelAttribute SalarieAideADomicile salarieAideADomicile) throws SalarieException {
 		if(salarieAideADomicile.getId() != null){
-			salarieAideADomicileService.updateSalarieAideADomicile(salarieAideADomicile);
+			try{
+				if(salarieAideADomicile.getNom().isEmpty()){
+					throw new DataIntegrityViolationException("Empty name");
+				}
+				salarieAideADomicileService.updateSalarieAideADomicile(salarieAideADomicile);
+				error = false;
+			}
+			catch (DataIntegrityViolationException e){
+				error = true;
+			}
 		}
 		else{
-			SalarieAideADomicile _salarieAideADomicile = salarieAideADomicileService.creerSalarieAideADomicile(salarieAideADomicile);
-			return "redirect:/salaries/" + _salarieAideADomicile.getId();
+			try{
+				if(salarieAideADomicile.getNom().isEmpty()){
+					throw new DataIntegrityViolationException("Empty name");
+				}
+				SalarieAideADomicile _salarieAideADomicile = salarieAideADomicileService.creerSalarieAideADomicile(salarieAideADomicile);
+				error = false;
+				return "redirect:/salaries/" + _salarieAideADomicile.getId();
+			}
+			catch (DataIntegrityViolationException e){
+				error = true;
+				return "redirect:/salaries/aide/new";
+			}
 		}
 		return "redirect:/salaries/" + salarieAideADomicile.getId();
 	}
@@ -68,7 +106,7 @@ public class SalarieController {
 		int pageSize;
 		List<SalarieAideADomicile> listSalaries = Collections.emptyList();
 		Page<SalarieAideADomicile> salaries = new PageImpl<>(listSalaries);
-		
+		error = false;
 		
 		if(page != null){
 			currentPage = Integer.parseInt(page);
@@ -123,6 +161,7 @@ public class SalarieController {
 			model.put("salaries",salaries);
 		}
 		model.put("title","Gestion des salariés");
+		model.put("error",error);
 		return "list";
 	}
 }

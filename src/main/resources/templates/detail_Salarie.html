@@ -90,7 +90,7 @@
         
     </form>
     
-    <div class="row">
+    <div class="row" th:if="${error}">
         <div class="col-lg-6">
             <ul class="list-group list-unstyled">
                 <li class="alert alert-danger" role="alert">Erreur dans un champ !</li>
@@ -104,12 +104,12 @@
         </div>
     </div>
 
-    <div class="row">
+    <!--<div class="row">
     <table>
         <tr><td class="alert alert-danger" role="alert">Erreur de type de données !</td></tr>
     </table>
     <div>Erreur globale spécifique !</div>
-    </div>
+    </div>-->
 </div>
 
 
